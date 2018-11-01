@@ -1,0 +1,407 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
+//Written by Angus Secomb
+//Last edited 22/11/17
+public class LapsManager : MonoBehaviour
+{
+    private WinActor winActor;
+
+    bool set = false;
+
+    private ItemManager iManager;
+    private NewPlacementController npc;
+    private PlayerSelectActor psActor;
+
+    public AudioSource countDown1;
+    public AudioSource countDown2;
+    public AudioSource countDown3;
+    public AudioSource countDownEnd;
+
+    private Image backBoard;
+
+    public GameObject newManager;
+
+    [HideInInspector]
+    public bool raceOver = false;
+
+    private GameObject raceRestart;
+    private Text restartText;
+    private Text first, second, third, fourth;
+    private Text raceCountdown;
+
+    public Sprite firstP, secondP, thirdP, fourthP;
+    private Image posOne, posTwo, posThree, posFour;
+
+    public Sprite greenLight;
+    public Sprite redLight;
+
+    private Image countOne, countTwo, countThree, countFour;
+
+    private Image raceEndsIn;
+    private Image endCount;
+    public Sprite[] numbers;
+
+    [HideInInspector]
+    public float raceCountdownTimer = 3.0f;
+    private int intRaceCountdown;
+
+    private float restartTime = 10.0f;
+    private float endRaceTime = 10;
+    private int intTime;
+    [HideInInspector]
+    public int endTime;
+    public List<GameObject> checkPoints;
+
+    private GameObject checkpoint;
+
+    [HideInInspector]
+    public bool check1 = false;
+    [HideInInspector]
+    public bool check2 = false;
+    [HideInInspector]
+    public bool check3 = false;
+    [HideInInspector]
+    public bool check4 = false;
+
+    [HideInInspector]
+    public PlayerActor kart1, kart2, kart3, kart4;
+
+    private Image firstPlace, secondPlace, thirdPlace, fourthPlace;
+
+    public GameObject Lapcounter;
+
+    public GameObject FinishLine;
+
+    private AudioSource engineRevving;
+
+    [HideInInspector]
+    public int lapNumber = 0;
+    void Start()
+    {
+        winActor = this.gameObject.GetComponent<WinActor>();
+        endCount = GameObject.Find("EndCount").GetComponent<Image>();
+        npc = this.gameObject.GetComponent<NewPlacementController>();
+        iManager = this.gameObject.GetComponent<ItemManager>();
+        psActor = this.gameObject.GetComponent<PlayerSelectActor>();
+        checkpoint = GameObject.Find("CheckPoint1");
+        checkPoints.Add(checkpoint);
+
+        checkpoint = GameObject.Find("CheckPoint2");
+        checkPoints.Add(checkpoint);
+
+        checkpoint = GameObject.Find("CheckPoint3");
+        checkPoints.Add(checkpoint);
+
+        checkpoint = GameObject.Find("CheckPoint4");
+        checkPoints.Add(checkpoint);
+
+        checkpoint = GameObject.Find("CheckPoint5");
+        checkPoints.Add(checkpoint);
+
+        checkpoint = GameObject.Find("CheckPoint6");
+        checkPoints.Add(checkpoint);
+
+        checkpoint = GameObject.Find("CheckPoint7");
+        checkPoints.Add(checkpoint);
+
+        checkpoint = GameObject.Find("CheckPoint8");
+        checkPoints.Add(checkpoint);
+
+        checkpoint = GameObject.Find("CheckPoint9");
+        checkPoints.Add(checkpoint);
+
+        checkpoint = GameObject.Find("CheckPoint10");
+        checkPoints.Add(checkpoint);
+
+        checkpoint = GameObject.Find("CheckPoint11");
+        checkPoints.Add(checkpoint);
+
+        checkpoint = GameObject.Find("CheckPoint12");
+        checkPoints.Add(checkpoint);
+
+        FinishLine = GameObject.Find("StartLine");
+
+        countOne = GameObject.Find("Startlight1").GetComponent<Image>();
+        countTwo = GameObject.Find("Startlight2").GetComponent<Image>();
+        countThree = GameObject.Find("Startlight3").GetComponent<Image>();
+        countFour = GameObject.Find("Startlight4").GetComponent<Image>();
+
+        raceCountdown = GameObject.Find("RaceCountdown").GetComponent<Text>();
+
+        raceRestart = GameObject.Find("RestartRace");
+        restartText = raceRestart.GetComponent<Text>();
+        posOne = GameObject.Find("firstPlayer").GetComponent<Image>();
+        posTwo = GameObject.Find("secondPlayer").GetComponent<Image>();
+        posThree = GameObject.Find("thirdPlayer").GetComponent<Image>();
+        posFour = GameObject.Find("fourthPlayer").GetComponent<Image>();
+        raceEndsIn = GameObject.Find("RaceEnd").GetComponent<Image>();
+        thirdPlace = GameObject.Find("thirdPlace").GetComponent<Image>();
+        fourthPlace = GameObject.Find("fourthPlace").GetComponent<Image>();
+        firstPlace = GameObject.Find("firstPlace").GetComponent<Image>();
+        secondPlace = GameObject.Find("secondPlace").GetComponent<Image>();
+
+        countDown1 = GameObject.Find("CountOneSound").GetComponent<AudioSource>();
+        countDown2 = GameObject.Find("CountOneSound").GetComponent<AudioSource>();
+        countDown3 = GameObject.Find("CountOneSound").GetComponent<AudioSource>();
+        countDownEnd = GameObject.Find("CountEndSound").GetComponent<AudioSource>();
+        engineRevving = GameObject.Find("StartRevSound").GetComponent<AudioSource>();
+
+        switch(psActor.playerCount)
+        {
+            case 2:
+                kart1 = GameObject.Find("PlayerCharacter_001").GetComponent<PlayerActor>();
+                kart2 = GameObject.Find("PlayerCharacter_002").GetComponent<PlayerActor>();
+                break;
+            case 3:
+
+                kart1 = GameObject.Find("PlayerCharacter_001").GetComponent<PlayerActor>();
+                kart2 = GameObject.Find("PlayerCharacter_002").GetComponent<PlayerActor>();
+                kart3 = GameObject.Find("PlayerCharacter_003").GetComponent<PlayerActor>();
+
+                break;
+            case 4:
+                kart1 = GameObject.Find("PlayerCharacter_001").GetComponent<PlayerActor>();
+                kart2 = GameObject.Find("PlayerCharacter_002").GetComponent<PlayerActor>();
+                kart3 = GameObject.Find("PlayerCharacter_003").GetComponent<PlayerActor>();
+                kart4 = GameObject.Find("PlayerCharacter_004").GetComponent<PlayerActor>();
+                break;
+        }
+
+        posOne.enabled = false;
+        posTwo.enabled = false;
+        posThree.enabled = false;
+        posFour.enabled = false;
+        firstPlace.enabled = false;
+        secondPlace.enabled = false;
+        thirdPlace.enabled = false;
+        fourthPlace.enabled = false;
+        engineRevving.Play();
+    }
+
+    private void Update()
+    {
+        Debug.Log("Lap: " + lapNumber);
+        raceCountdownTimer -= Time.deltaTime;
+        intRaceCountdown = (int)raceCountdownTimer;
+        raceCountdown.text = intRaceCountdown.ToString();
+        if(raceCountdownTimer < 0)
+        {
+            raceCountdown.enabled = false;
+        }
+        if(raceCountdownTimer < 3 && raceCountdownTimer > 2)
+        {
+            if(!countDown1.isPlaying)
+            countDown1.Play();
+            countOne.sprite = greenLight;
+     
+        }
+        if(raceCountdownTimer <  2 && raceCountdownTimer > 1)
+        {
+            if(!countDown2.isPlaying)
+            countDown2.Play();
+            countTwo.sprite = greenLight;
+        }
+        if(raceCountdownTimer < 1 && raceCountdownTimer > 0)
+        {
+            if(!countDown3.isPlaying)
+            countDown3.Play();
+         countThree.sprite = greenLight;
+        }
+        if(raceCountdownTimer < 0 && raceCountdownTimer > -0.5f)
+        {
+            if (!countDownEnd.isPlaying)
+            {
+                countDownEnd.Play();
+            }
+            countFour.sprite = greenLight;
+        }
+        if(raceCountdownTimer < -0.5f)
+        {
+            if (!set)
+            {
+                GameObject.Find("Backboard").SetActive(false);
+                set = true;
+            }
+            countFour.enabled = false;
+            countThree.enabled = false;
+            countTwo.enabled = false;
+            countOne.enabled = false;
+
+        }
+        if(raceCountdownTimer < -1.5f)
+        {
+            engineRevving.Stop();
+        }
+
+
+        switch (psActor.playerCount)
+        {
+
+            case 2:
+
+                if ((kart1.lapNumber == 4 || kart2.lapNumber == 4) && !raceOver)
+                {
+                    endRaceTime -= Time.deltaTime;
+                    endTime = (int)endRaceTime;
+                    raceEndsIn.enabled = true;
+                    endCount.enabled = true;
+                    raceCountDown();
+                }
+                if (endTime < 0)
+                {
+                    winActor.raceOver = true;
+        //            restartTime -= Time.deltaTime;
+                    raceOver = true;
+                    raceEndsIn.enabled = false;
+                    endCount.enabled = false;
+
+                    posOne.enabled = true;
+                    posTwo.enabled = true;
+                    firstPlace.enabled = true;
+                    secondPlace.enabled = true;
+
+                    iManager.enabled = false;
+                    npc.enabled = false;
+                    this.enabled = false;
+                    psActor.enabled = true;
+
+                    if (restartTime < 0)
+                    {
+                        SceneManager.LoadScene(1);
+                        Instantiate(newManager);
+                        GameObject.Destroy(this.gameObject);
+                    }
+
+                }
+                break;
+            case 3:
+
+
+                if ((kart1.lapNumber == 4 || kart2.lapNumber == 4 || kart3.lapNumber == 4) && !raceOver)
+                {
+                    endRaceTime -= Time.deltaTime;
+                    endTime = (int)endRaceTime;
+                    raceEndsIn.enabled = true;
+                    endCount.enabled = true;
+                    raceCountDown();
+                }
+                if (endTime < 0)
+                {
+                    //   restartTime -= Time.deltaTime;
+                    winActor.raceOver = true;
+                    raceOver = true;
+                    raceEndsIn.enabled = false;
+                    endCount.enabled = false;
+
+                    posOne.enabled = true;
+                    posTwo.enabled = true;
+                    posThree.enabled = true;
+                    firstPlace.enabled = true;
+                    secondPlace.enabled = true;
+                    thirdPlace.enabled = true;
+
+                    iManager.enabled = false;
+                    npc.enabled = false;
+                    this.enabled = false;
+                    psActor.enabled = true;
+
+                    if (restartTime < 0)
+                    {
+                        SceneManager.LoadScene(1);
+                        Instantiate(newManager);
+                        GameObject.Destroy(this.gameObject);
+                    }
+
+                }
+                break;
+            case 4:               
+                if ((kart1.lapNumber == 4 || kart2.lapNumber == 4 || kart3.lapNumber == 4 || kart4.lapNumber == 4) && !raceOver)
+                {
+                    endRaceTime -= Time.deltaTime;
+                    endTime = (int)endRaceTime;
+                    raceEndsIn.enabled = true;
+                    endCount.enabled = true;
+                    raceCountDown();
+                }
+                if (endTime < 0)
+                {
+                    winActor.raceOver = true;
+           //         restartTime -= Time.deltaTime;
+                    raceOver = true;
+                    raceEndsIn.enabled = false;
+                    endCount.enabled = false;
+                    restartText.enabled = true;
+                    intTime = (int)restartTime;
+                    restartText.text = "Race Restarts in: " + intTime.ToString();
+
+                    posOne.enabled = true;
+                    posTwo.enabled = true;
+                    posThree.enabled = true;
+                    posFour.enabled = true;
+                    firstPlace.enabled = true;
+                    secondPlace.enabled = true;
+                    thirdPlace.enabled = true;
+                    fourthPlace.enabled = true;
+               
+
+                    iManager.enabled = false;
+                    npc.enabled = false;
+                    this.enabled = false;
+                    psActor.enabled = true;
+
+                    if (restartTime < 0)
+                    {
+                        SceneManager.LoadScene(1);
+                        Instantiate(newManager);
+                        GameObject.Destroy(this.gameObject);
+                    }
+
+                }
+                break;
+        }
+
+
+      
+    }
+
+    void raceCountDown()
+    {
+        switch(endTime)
+        {
+            case 9:
+                endCount.sprite = numbers[9];
+                break;
+            case 8:
+                endCount.sprite = numbers[8];
+                break;
+            case 7:
+                endCount.sprite = numbers[7];
+                break;
+            case 6:
+                endCount.sprite = numbers[6];
+                break;
+            case 5:
+                endCount.sprite = numbers[5];
+                break;
+            case 4:
+                endCount.sprite = numbers[4];
+                break;
+            case 3:
+                endCount.sprite = numbers[3];
+                break;
+            case 2:
+                endCount.sprite = numbers[2];
+                break;
+            case 1:
+                endCount.sprite = numbers[1];
+                break;
+            case 0:
+                endCount.sprite = numbers[0];
+                break;
+        }
+    }
+}
